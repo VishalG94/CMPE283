@@ -6,7 +6,7 @@
  * derived from arch/x86/kvm/x86.c
  *
  * Copyright 2011 Red Hat, Inc. and/or its affiliates.
- * Copyright IBM Corporation, 2008
+ * Copyright IBM Corporation, 2008EXPORT_SYMBOL_GPL
  */
 
 #include <linux/kvm_host.h>
@@ -363,7 +363,7 @@ static inline void do_cpuid_7_mask(struct kvm_cpuid_entry2 *entry, int index)
 
 	/* cpuid 7.0.ecx*/
 	const u32 kvm_cpuid_7_0_ecx_x86_features =
-		F(AVX512VBMI) | F(LA57) | F(PKU) | 0 /*OSPKE*/ | F(RDPID) |
+		F(AVX512VBMI) | F(LA57) | F(PKU) | 0 /*OSPKE*/ |
 		F(AVX512_VPOPCNTDQ) | F(UMIP) | F(AVX512_VBMI2) | F(GFNI) |
 		F(VAES) | F(VPCLMULQDQ) | F(AVX512_VNNI) | F(AVX512_BITALG) |
 		F(CLDEMOTE) | F(MOVDIRI) | F(MOVDIR64B) | 0 /*WAITPKG*/;
@@ -1037,8 +1037,10 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
+
 atomic_long_t totalTimeSpent = ATOMIC_LONG_INIT(0);
 atomic_t totalExits = ATOMIC_INIT(0);
+
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
@@ -1049,23 +1051,30 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
+/*
+	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+	kvm_rax_write(vcpu, eax);
+	kvm_rbx_write(vcpu, ebx);
+	kvm_rcx_write(vcpu, ecx);
+	kvm_rdx_write(vcpu, edx);
+*/
 	if(eax == 0x4FFFFFFF)
-		{
-			long exitTime = atomic_long_read(&totalTimeSpent);
-			short int firstVal = (int)exitTime;
-			short int lastVal = exitTime >> 32;
+	{
+		long exitTime = atomic_long_read(&totalTimeSpent);
+		short int firstVal = (int)exitTime;
+		short int lastVal = exitTime >> 32;
 
-			kvm_rax_write(vcpu, atomic_read(&totalExits));
-			kvm_rbx_write(vcpu, firstVal);
-			kvm_rcx_write(vcpu, lastVal);
-			kvm_rdx_write(vcpu, 2019);
-		}else{
-			kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
-			kvm_rax_write(vcpu, eax);
-			kvm_rbx_write(vcpu, ebx);
-			kvm_rcx_write(vcpu, ecx);
-			kvm_rdx_write(vcpu, edx);
-		}
+		kvm_rax_write(vcpu, atomic_read(&totalExits));
+		kvm_rbx_write(vcpu, firstVal);
+		kvm_rcx_write(vcpu, lastVal);
+		kvm_rdx_write(vcpu, 2019);
+	}else{
+		kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+		kvm_rax_write(vcpu, eax);
+		kvm_rbx_write(vcpu, ebx);
+		kvm_rcx_write(vcpu, ecx);
+		kvm_rdx_write(vcpu, edx);
+	}
 	return kvm_skip_emulated_instruction(vcpu);
 }
 EXPORT_SYMBOL(totalTimeSpent);
