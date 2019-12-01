@@ -1039,6 +1039,8 @@ EXPORT_SYMBOL_GPL(kvm_cpuid);
 
 atomic_long_t totalTimeSpent = ATOMIC_LONG_INIT(0);
 atomic_t totalExits = ATOMIC_INIT(0);
+atomic_t exitNumArray[69] = {ATOMIC_INIT(0)};
+atomic_long_t eixtNumTimeStampArray[69] = {ATOMIC_LONG_INIT(0)};
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
@@ -1068,7 +1070,51 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 			kvm_rbx_write(vcpu, lastVal);
 			kvm_rcx_write(vcpu, firstVal);
 			kvm_rdx_write(vcpu, 2019);
-		}else{
+		}
+		else if(eax == 0x4FFFFFFD){
+			if(ecx < 0 || ecx > 68 || ecx == 35 || ecx == 38 || ecx == 42 || ecx == 65  ){
+			kvm_rax_write(vcpu, 0);
+			kvm_rbx_write(vcpu, 0);
+			kvm_rcx_write(vcpu, 0);
+			kvm_rdx_write(vcpu, 0x4FFFFFFF);
+			} else if(ecx == 3 || ecx == 4 || ecx == 5 || ecx == 6  || ecx == 11  || ecx == 16  || ecx == 17  || ecx == 33  || ecx == 34  || ecx == 51 || ecx == 66  ){
+			kvm_rax_write(vcpu, 0);
+			kvm_rbx_write(vcpu, 0);
+			kvm_rcx_write(vcpu, 0);
+			kvm_rdx_write(vcpu, 0);
+} else {
+			long exitTime = atomic_long_read(&eixtNumTimeStampArray[ecx]);
+			short int firstVal = (int)exitTime;
+			short int lastVal = exitTime >> 32;
+
+			kvm_rax_write(vcpu, atomic_read(&exitNumArray[ecx]));
+			kvm_rbx_write(vcpu, lastVal);
+			kvm_rcx_write(vcpu, firstVal);
+			kvm_rdx_write(vcpu, ecx); 
+			}
+		} else if(eax == 0x4FFFFFFC){
+			if(ecx < 0 || ecx > 68 || ecx == 35 || ecx == 38 || ecx == 42 || ecx == 65  ){
+				kvm_rax_write(vcpu, 0);
+				kvm_rbx_write(vcpu, 0);
+				kvm_rcx_write(vcpu, 0);
+				kvm_rdx_write(vcpu, 0x4FFFFFFF);
+			} else if(ecx == 3 || ecx == 4 || ecx == 5 || ecx == 6  || ecx == 11  || ecx == 16  || ecx == 17  || ecx == 33  || ecx == 34  || ecx == 51 || ecx == 66  ){
+			kvm_rax_write(vcpu, 0);
+			kvm_rbx_write(vcpu, 0);
+			kvm_rcx_write(vcpu, 0);
+			kvm_rdx_write(vcpu, 0);
+			} 
+			else {
+			long exitTime = atomic_long_read(&eixtNumTimeStampArray[ecx]);
+			short int firstVal = (int)exitTime;
+			short int lastVal = exitTime >> 32;
+
+			kvm_rax_write(vcpu, atomic_read(&exitNumArray[ecx]));
+			kvm_rbx_write(vcpu, lastVal);
+			kvm_rcx_write(vcpu, firstVal);
+			kvm_rdx_write(vcpu, ecx); 
+			}
+		} else{
 			kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
 			kvm_rax_write(vcpu, eax);
 			kvm_rbx_write(vcpu, ebx);
@@ -1081,3 +1127,5 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 EXPORT_SYMBOL(totalTimeSpent);
 EXPORT_SYMBOL(totalExits);
 EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
+EXPORT_SYMBOL(exitNumArray);
+EXPORT_SYMBOL(eixtNumTimeStampArray);

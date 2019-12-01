@@ -5861,6 +5861,8 @@ void dump_vmcs(void)
 
 extern atomic_long_t totalTimeSpent;
 extern atomic_t totalExits;
+extern atomic64_t eixtNumTimeStampArray[69];
+extern atomic_t exitNumArray[69];
 
 static int vmx_handle_exit(struct kvm_vcpu *vcpu)
 {
@@ -5876,6 +5878,7 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu)
 	
 	/*My code, increment Vishal*/
  	atomic_inc(&totalExits);
+ 	atomic_inc(&exitNumArray[exit_reason]);
 	
 	/*My code, start timer Vishal*/
 	startTime = rdtsc();
@@ -5899,6 +5902,7 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu)
 		endTime=rdtsc();
 		time= endTime - startTime;
 		atomic_long_add(time, &totalTimeSpent); 
+		atomic_long_add(time, &eixtNumTimeStampArray[exit_reason]); 
 		return returnVal;
 	}
 		/*return handle_invalid_guest_state(vcpu);*/
@@ -5909,6 +5913,7 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu)
 		endTime=rdtsc();
 		time= endTime - startTime;
 		atomic_long_add(time, &totalTimeSpent); 
+		atomic_long_add(time, &eixtNumTimeStampArray[exit_reason]); 
 		return returnVal;
 	}
 		
@@ -5983,6 +5988,7 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu)
 		endTime=rdtsc();
 		time= endTime - startTime;
 		atomic_long_add(time, &totalTimeSpent); 
+		atomic_long_add(time, &eixtNumTimeStampArray[exit_reason]); 
 		return returnVal;
 	}
 		/*return kvm_vmx_exit_handlers[exit_reason](vcpu);*/
@@ -8054,3 +8060,4 @@ static int __init vmx_init(void)
 	return 0;
 }
 module_init(vmx_init);
+
